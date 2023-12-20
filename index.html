@@ -4,144 +4,75 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arabic Quiz</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f8f8f8;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    .quiz-container {
-      background-color: #fff;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-      padding: 20px;
-      width: 300px;
-      text-align: center;
-    }
-
-    h1 {
-      color: #333;
-    }
-
-    .question {
-      font-size: 18px;
-      margin-bottom: 20px;
-    }
-
-    .options {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .option {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    .option:hover {
-      background-color: #f0f0f0;
-    }
-
-    .result {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-200 h-screen flex items-center justify-center">
 
-<div class="quiz-container">
-  <h1>Arabic Quiz</h1>
+<div class="quiz-container bg-white shadow-md rounded p-8 w-300 text-center">
+  <h1 class="text-gray-700">Arabic Quiz</h1>
 
-  <div class="question" id="question"></div>
+  <div class="question mt-4" id="question"></div>
 
-  <div class="options" id="options"></div>
+  <div class="options mt-4" id="options"></div>
 
-  <div class="result" id="result"></div>
+  <div class="result mt-4 font-bold" id="result"></div>
 </div>
 
 <script>
+
+// rewrite this functionality 
 let quizData = [
   { question: "What is the Arabic word for 'Hello'?", options: ["مرحبًا", "شكرًا", "نعم", "لا"], correctAnswer: "مرحبًا" },
-  { question: "What is the Arabic word for 'Thank you'?", options: ["مرحبًا", "شكرًا", "نعم", "لا"], correctAnswer: "شكرًا" },
-  { question: "How do you say 'Yes' in Arabic?", options: ["مرحبًا", "شكرًا", "نعم", "لا"], correctAnswer: "نعم" },
-  { question: "What is the Arabic word for 'No'?", options: ["مرحبًا", "شكرًا", "نعم", "لا"], correctAnswer: "لا" },
-  { question: "Translate 'I' into Arabic.", options: ["أنا", "أنتَ", "هو", "هي"], correctAnswer: "أنا" },
-  { question: "How do you say 'You' (male) in Arabic?", options: ["أنتَ", "أنتِ", "نحن", "أنتم"], correctAnswer: "أنتَ" },
-  { question: "Translate 'He' into Arabic.", options: ["أنتَ", "هو", "نحن", "أنتم"], correctAnswer: "هو" },
-  { question: "Translate 'She' into Arabic.", options: ["أنتِ", "هو", "هي", "نحن"], correctAnswer: "هي" },
-  { question: "How do you say 'We' in Arabic?", options: ["نحن", "أنتم", "أنتِ", "أنا"], correctAnswer: "نحن" },
-  { question: "Translate 'You' (plural) into Arabic.", options: ["أنتم", "أنتِ", "هم", "هن"], correctAnswer: "أنتم" },
-  { question: "How do you say 'They' in Arabic?", options: ["أنتم", "هم", "هن", "نحن"], correctAnswer: "هم" },
-  { question: "What is the Arabic word for 'Today'?", options: ["اليوم", "غدًا", "الآن", "هنا"], correctAnswer: "اليوم" },
-  { question: "Translate 'Tomorrow' into Arabic.", options: ["غدًا", "الآن", "هنا", "اليوم"], correctAnswer: "غدًا" },
-  { question: "What is the Arabic word for 'Now'?", options: ["اليوم", "الآن", "غدًا", "هنا"], correctAnswer: "الآن" },
-  { question: "Translate 'Here' into Arabic.", options: ["هنا", "هناك", "كيف حالك؟", "جيد"], correctAnswer: "هنا" },
-  { question: "Translate 'There' into Arabic.", options: ["هنا", "هناك", "كيف حالك؟", "جيد"], correctAnswer: "هناك" },
-  { question: "How do you ask 'How are you?' (male) in Arabic?", options: ["كيف حالك؟", "جيد", "ماء", "طعام"], correctAnswer: "كيف حالك؟" },
-  { question: "Translate 'Good' into Arabic.", options: ["كيف حالك؟", "جيد", "ماء", "طعام"], correctAnswer: "جيد" },
-  { question: "What is the Arabic word for 'Water'?", options: ["ماء", "طعام", "جيد", "كبير"], correctAnswer: "ماء" },
-  { question: "Translate 'Food' into Arabic.", options: ["طعام", "ماء", "جيد", "كبير"], correctAnswer: "طعام" }
-  // Add more questions as needed
-    ];
+];
 
-  var currentQuestionIndex = 0;
+var currentQuestionIndex = 0;
 
-  function loadQuestion() {
-    var currentQuestion = quizData[currentQuestionIndex];
-    var questionElement = document.getElementById("question");
-    var optionsElement = document.getElementById("options");
-    var resultElement = document.getElementById("result");
+function loadQuestion() {
+  var currentQuestion = quizData[currentQuestionIndex];
+  var questionElement = document.getElementById("question");
+  var optionsElement = document.getElementById("options");
+  var resultElement = document.getElementById("result");
 
-    questionElement.textContent = currentQuestion.question;
-    optionsElement.innerHTML = "";
+  questionElement.textContent = currentQuestion.question;
+  optionsElement.innerHTML = "";
 
-    currentQuestion.options.forEach(function(option) {
-      var optionElement = document.createElement("div");
-      optionElement.textContent = option;
-      optionElement.className = "option";
-      optionElement.onclick = function() { checkAnswer(option); };
-      optionsElement.appendChild(optionElement);
-    });
+  currentQuestion.options.forEach(function(option) {
+    var optionElement = document.createElement("div");
+    optionElement.textContent = option;
+    optionElement.className = "option p-4 border rounded cursor-pointer transition duration-300 hover:bg-gray-200";
+    optionElement.onclick = function() { checkAnswer(option); };
+    optionsElement.appendChild(optionElement);
+  });
 
-    resultElement.textContent = "";
+  resultElement.textContent = "";
+}
+
+function checkAnswer(selectedAnswer) {
+  var currentQuestion = quizData[currentQuestionIndex];
+  var resultElement = document.getElementById("result");
+
+  if (selectedAnswer === currentQuestion.correctAnswer) {
+    resultElement.textContent = "Correct! Well done!";
+    resultElement.style.color = "green";
+  } else {
+    resultElement.textContent = "Incorrect. Try again!";
+    resultElement.style.color = "red";
   }
 
-  function checkAnswer(selectedAnswer) {
-    var currentQuestion = quizData[currentQuestionIndex];
-    var resultElement = document.getElementById("result");
+  // Move to the next question
+  currentQuestionIndex++;
 
-    if (selectedAnswer === currentQuestion.correctAnswer) {
-      resultElement.textContent = "Correct! Well done!";
-      resultElement.style.color = "green";
-    } else {
-      resultElement.textContent = "Incorrect. Try again!";
-      resultElement.style.color = "red";
-    }
-
-    // Move to the next question
-    currentQuestionIndex++;
-
-    // Check if there are more questions
-    if (currentQuestionIndex < quizData.length) {
-      // Load the next question
-      loadQuestion();
-    } else {
-      // Quiz is complete
-      resultElement.textContent = "Quiz complete!";
-    }
+  // Check if there are more questions
+  if (currentQuestionIndex < quizData.length) {
+    // Load the next question
+    loadQuestion();
+  } else {
+    // Quiz is complete
+    resultElement.textContent = "Quiz complete!";
   }
+}
 
-  loadQuestion();
+loadQuestion();
 </script>
 
 </body>
