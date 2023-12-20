@@ -11,68 +11,98 @@
 <div class="quiz-container bg-white shadow-md rounded p-8 w-300 text-center">
   <h1 class="text-gray-700">Arabic Quiz</h1>
 
-  <div class="question mt-4" id="question"></div>
+  <form id="quantityForm" class="mt-4">
+    <label for="quantity" class="text-gray-700">Select Quantity:</label>
+    <select id="quantity" name="quantity" class="mt-2 p-2 border rounded">
+      <option value="5">5</option>
+      <option value="10">10</option>
+      <option value="15">15</option>
+    </select>
+    <button type="button" class="mt-4 bg-blue-500 text-white p-2 rounded hover:bg-blue-700" onclick="startQuiz()">Start Quiz</button>
+  </form>
 
-  <div class="options mt-4" id="options"></div>
+  <div id="quizContainer" class="hidden">
+    <div class="question mt-4" id="question"></div>
 
-  <div class="result mt-4 font-bold" id="result"></div>
+    <div class="options mt-4" id="options"></div>
+
+    <div class="result mt-4 font-bold" id="result"></div>
+  </div>
 </div>
 
 <script>
 
-// rewrite this functionality 
-let quizData = [
-  { question: "What is the Arabic word for 'Hello'?", options: ["مرحبًا", "شكرًا", "نعم", "لا"], correctAnswer: "مرحبًا" },
-];
+const fetchWords = async(quantity) => {
+  const response = await fetch(`http://localhost:3000/api/words?quantity=${quantity}`);
+  const words = await response.json();
+  return words; 
+}
 
 var currentQuestionIndex = 0;
+var quizData; // Declare quizData variable
+
+function startQuiz() {
+  var selectedQuantity = parseInt(document.getElementById("quantity").value, 10);
+  generateQuiz(selectedQuantity);
+}
+
+function generateQuiz(quantity) {
+  // fetch words from api
+  fetchWords(quantity)
+    .then(data => {
+      quizData = data; // Assign fetched data to quizData
+      currentQuestionIndex = 0;
+      
+      document.getElementById("quizContainer").classList.remove("hidden");
+
+      loadQuestion();
+    })
+    .catch(error => console.error(error));
+}
 
 function loadQuestion() {
-  var currentQuestion = quizData[currentQuestionIndex];
   var questionElement = document.getElementById("question");
   var optionsElement = document.getElementById("options");
   var resultElement = document.getElementById("result");
 
-  questionElement.textContent = currentQuestion.question;
-  optionsElement.innerHTML = "";
+  if (currentQuestionIndex >= quizData.length) {
+    // Quiz is complete
+    resultElement.textContent = "Quiz complete!";
+    return;
+  }
 
-  currentQuestion.options.forEach(function(option) {
-    var optionElement = document.createElement("div");
-    optionElement.textContent = option;
-    optionElement.className = "option p-4 border rounded cursor-pointer transition duration-300 hover:bg-gray-200";
-    optionElement.onclick = function() { checkAnswer(option); };
-    optionsElement.appendChild(optionElement);
-  });
+  // Display the question
+  questionElement.textContent = quizData[currentQuestionIndex];
+
+  // Display the options
+  optionsElement.innerHTML = "";
+  for (var i = 1; i <= 2; i++) {
+    var optionIndex = currentQuestionIndex + i;
+    if (optionIndex < quizData.length) {
+      var optionElement = document.createElement("div");
+      optionElement.textContent = quizData[optionIndex];
+      optionElement.className = "option p-4 border rounded cursor-pointer transition duration-300 hover:bg-gray-200";
+      optionElement.onclick = function() { checkAnswer(optionElement.textContent); };
+      optionsElement.appendChild(optionElement);
+    }
+  }
 
   resultElement.textContent = "";
 }
 
 function checkAnswer(selectedAnswer) {
-  var currentQuestion = quizData[currentQuestionIndex];
   var resultElement = document.getElementById("result");
 
-  if (selectedAnswer === currentQuestion.correctAnswer) {
-    resultElement.textContent = "Correct! Well done!";
-    resultElement.style.color = "green";
-  } else {
-    resultElement.textContent = "Incorrect. Try again!";
-    resultElement.style.color = "red";
-  }
+  // Implement logic to check the selected answer against the correct answer
+  resultElement.textContent = "Answered: " + selectedAnswer;
 
   // Move to the next question
-  currentQuestionIndex++;
+  currentQuestionIndex += 3;
 
-  // Check if there are more questions
-  if (currentQuestionIndex < quizData.length) {
-    // Load the next question
-    loadQuestion();
-  } else {
-    // Quiz is complete
-    resultElement.textContent = "Quiz complete!";
-  }
+  // Load the next question
+  loadQuestion();
 }
 
-loadQuestion();
 </script>
 
 </body>

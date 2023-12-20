@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -12,7 +14,7 @@ type Word struct {
 	English string
 }
 
-func getWord() [2]string {
+func getWords(quantity int) []string {
 	rand.Seed(time.Now().UnixNano())
 
 	wordsData := []Word{
@@ -99,16 +101,43 @@ func getWord() [2]string {
 		{"حب", "Love"},
 	}
 
-	randomNumber := rand.Intn(len(wordsData))
-	randomWord := wordsData[randomNumber]
+	words := []string{}
+	for i := 0; i < quantity; i++ {
+		randomNumber := rand.Intn(len(wordsData))
+		randomWord := wordsData[randomNumber]
+		words = append(words, randomWord.Arabic, randomWord.English)
+	}
 
-	return [2]string{randomWord.Arabic, randomWord.English}
+	return words
+}
+
+func enableCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
 func main() {
 	http.HandleFunc("/api/words", func(w http.ResponseWriter, r *http.Request) {
-		randomWord := getWord()
-		json.NewEncoder(w).Encode(randomWord)
+		if r.Method == http.MethodOptions {
+			enableCORS(w)
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		quantity := r.URL.Query().Get("quantity")
+
+		q, err := strconv.Atoi(quantity)
+		if err != nil {
+			log.Fatal("bad query")
+		}
+
+		randomWords := getWords(q)
+
+		enableCORS(w)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(randomWords)
 	})
 
 	http.ListenAndServe(":3000", nil)
