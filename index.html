@@ -1,109 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arabic Quiz</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Learning Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-200 h-screen flex items-center justify-center">
+<body class="bg-gray-100 h-screen flex items-center justify-center">
 
-<div class="quiz-container bg-white shadow-md rounded p-8 w-300 text-center">
-  <h1 class="text-gray-700">Arabic Quiz</h1>
+    <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h1 id="question" class="text-2xl font-bold mb-4">Language Learning Quiz</h1>
 
-  <form id="quantityForm" class="mt-4">
-    <label for="quantity" class="text-gray-700">Select Quantity:</label>
-    <select id="quantity" name="quantity" class="mt-2 p-2 border rounded">
-      <option value="5">5</option>
-      <option value="10">10</option>
-      <option value="15">15</option>
-    </select>
-    <button type="button" class="mt-4 bg-blue-500 text-white p-2 rounded hover:bg-blue-700" onclick="startQuiz()">Start Quiz</button>
-  </form>
+        <div id="answerOptions" class="flex flex-wrap gap-2 mb-4">
+            <!-- Answer options will be appended here dynamically -->
+        </div>
 
-  <div id="quizContainer" class="hidden">
-    <div class="question mt-4" id="question"></div>
+        <button id="nextButton" class="hidden bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer">
+            Next
+        </button>
 
-    <div class="options mt-4" id="options"></div>
+        <button id="startQuiz" class="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer">
+            Start Quiz
+        </button>
 
-    <div class="result mt-4 font-bold" id="result"></div>
-  </div>
-</div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const questionElement = document.getElementById('question');
+                const answerOptionsContainer = document.getElementById('answerOptions');
+                const nextButton = document.getElementById('nextButton');
 
-<script>
+                let currentQuestionIndex = 0;
+                let quizData = [];
 
-const fetchWords = async(quantity) => {
-  const response = await fetch(`http://localhost:3000/api/words?quantity=${quantity}`);
-  const words = await response.json();
-  return words; 
-}
+                const startQuizButton = document.getElementById('startQuiz');
+                startQuizButton.addEventListener('click', function () {
+                    fetch('http://localhost:3000/api/words?quantity=5')
+                        .then(response => response.json())
+                        .then(data => {
+                            quizData = data.words;
+                            showQuestion();
+                            startQuizButton.style.display = 'none';
+                        });
+                });
 
-var currentQuestionIndex = 0;
-var quizData; // Declare quizData variable
+                function showQuestion() {
+                    const currentQuestion = quizData[currentQuestionIndex];
+                    questionElement.textContent = currentQuestion.arabic;
 
-function startQuiz() {
-  var selectedQuantity = parseInt(document.getElementById("quantity").value, 10);
-  generateQuiz(selectedQuantity);
-}
+                    // Generate answer options
+                    const answerOptions = getRandomOptions(currentQuestion, quizData);
+                    answerOptionsContainer.innerHTML = answerOptions.map(option => `
+                        <button class="bg-gray-200 px-4 py-2 rounded-md answer-option">${option}</button>
+                    `).join('');
 
-function generateQuiz(quantity) {
-  // fetch words from api
-  fetchWords(quantity)
-    .then(data => {
-      quizData = data; // Assign fetched data to quizData
-      currentQuestionIndex = 0;
-      
-      document.getElementById("quizContainer").classList.remove("hidden");
+                    nextButton.classList.toggle('hidden', true);
+                }
 
-      loadQuestion();
-    })
-    .catch(error => console.error(error));
-}
+                answerOptionsContainer.addEventListener('click', function (event) {
+                    const selectedOption = event.target.textContent;
+                    if (selectedOption) {
+                        const correctOption = quizData[currentQuestionIndex].english;
+                        const isCorrect = selectedOption === correctOption;
 
-function loadQuestion() {
-  var questionElement = document.getElementById("question");
-  var optionsElement = document.getElementById("options");
-  var resultElement = document.getElementById("result");
+                        answerOptionsContainer.querySelectorAll('.answer-option').forEach(option => {
+                            option.classList.toggle('bg-green-300', isCorrect && option.textContent === correctOption);
+                            option.classList.toggle('bg-red-300', !isCorrect && option.textContent === selectedOption);
+                        });
 
-  if (currentQuestionIndex >= quizData.length) {
-    // Quiz is complete
-    resultElement.textContent = "Quiz complete!";
-    return;
-  }
+                        nextButton.classList.toggle('hidden', false);
+                    }
+                });
 
-  // Display the question
-  questionElement.textContent = quizData[currentQuestionIndex];
+                nextButton.addEventListener('click', function () {
+                    answerOptionsContainer.querySelectorAll('.answer-option').forEach(option => {
+                        option.classList.remove('bg-green-300', 'bg-red-300');
+                    });
 
-  // Display the options
-  optionsElement.innerHTML = "";
-  for (var i = 1; i <= 2; i++) {
-    var optionIndex = currentQuestionIndex + i;
-    if (optionIndex < quizData.length) {
-      var optionElement = document.createElement("div");
-      optionElement.textContent = quizData[optionIndex];
-      optionElement.className = "option p-4 border rounded cursor-pointer transition duration-300 hover:bg-gray-200";
-      optionElement.onclick = function() { checkAnswer(optionElement.textContent); };
-      optionsElement.appendChild(optionElement);
-    }
-  }
 
-  resultElement.textContent = "";
-}
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < quizData.length) {
+                        showQuestion();
+                    } else {
+                        questionElement.textContent = 'Quiz Completed!';
+                        answerOptionsContainer.innerHTML = '';
+                        nextButton.style.display = 'none';
+                    }
+                });
 
-function checkAnswer(selectedAnswer) {
-  var resultElement = document.getElementById("result");
+                function getRandomOptions(correctWord, allWords) {
+                    const options = [correctWord.english];
+                    while (options.length < 4) {
+                        const randomWord = allWords[Math.floor(Math.random() * allWords.length)].english;
+                        if (!options.includes(randomWord)) {
+                            options.push(randomWord);
+                        }
+                    }
+                    return shuffleArray(options);
+                }
 
-  // Implement logic to check the selected answer against the correct answer
-  resultElement.textContent = "Answered: " + selectedAnswer;
-
-  // Move to the next question
-  currentQuestionIndex += 3;
-
-  // Load the next question
-  loadQuestion();
-}
-
-</script>
-
+                function shuffleArray(array) {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                    return array;
+                }
+            });
+        </script>
+    </div>
 </body>
 </html>
